@@ -5,24 +5,28 @@ on:
   workflow_dispatch:
     inputs:
       app_name:
-        description: App name
+        description: "App name"
         required: true
-        default: My App
+        default: "HTML to APK"
+        type: string
       package_name:
-        description: Package name
+        description: "Package name"
         required: true
-        default: com.example.myapp
+        default: "com.frogi4rus.htmltoapk"
+        type: string
       mode:
-        description: url or html
+        description: "Website source"
         required: true
         type: choice
         options:
           - url
           - html
+        default: url
       site_url:
-        description: HTTPS URL
-        required: false
-        default: https://example.com
+        description: "HTTPS website URL (used in url mode)"
+        required: true
+        default: "https://frogi4rus.github.io/html-to-apk/"
+        type: string
 
 permissions:
   contents: read
@@ -30,122 +34,197 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
-      - uses: android-actions/setup-android@v3
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
 
-      - name: Install Android SDK
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
 
-      - name: Generate project
+      - name: Create Android project
         env:
           APP_NAME: ${{ inputs.app_name }}
           PACKAGE_NAME: ${{ inputs.package_name }}
           MODE: ${{ inputs.mode }}
           SITE_URL: ${{ inputs.site_url }}
+        shell: bash
         run: |
-          set -e
-          mkdir -p app/src/main/java app/src/main/assets
-          PKG_PATH="${PACKAGE_NAME//./\/}"
-          mkdir -p "app/src/main/java/$PKG_PATH"
+          set -euo pipefail
 
-          cat > settings.gradle.kts <<'EOF'
+          if ! [[ "$PACKAGE_NAME" =~ ^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$ ]]; then
+            echo "Invalid package name: $PACKAGE_NAME"
+            exit 1
+          fi
+
+          if [[ "$MODE" == "url" ]]; then
+            if [[ ! "$SITE_URL" =~ ^https://[^[:space:]]+$ ]]; then
+              echo "Please provide a valid HTTPS URL."
+              exit 1
+            fi
+          fi
+
+          mkdir -p app/src/main/java
+          mkdir -p app/src/main/assets
+
+          PACKAGE_PATH="${PACKAGE_NAME//./\/}"
+          mkdir -p "app/src/main/java/$PACKAGE_PATH"
+
+          cat > settings.gradle <<'EOF'
           pluginManagement {
-              repositories { google(); mavenCentral(); gradlePluginPortal() }
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
           }
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories { google(); mavenCentral() }
+              repositories {
+                  google()
+                  mavenCentral()
+              }
           }
-          rootProject.name = "HtmlToApk"
+          rootProject.name = "WebsiteApp"
           include(":app")
           EOF
 
-          cat > build.gradle.kts <<'EOF'
+          cat > build.gradle <<'EOF'
           plugins {
-              id("com.android.application") version "8.7.3" apply false
-              id("org.jetbrains.kotlin.android") version "2.0.21" apply false
+              id 'com.android.application' version '8.7.3' apply false
           }
           EOF
 
-          echo 'org.gradle.jvmargs=-Xmx2g' > gradle.properties
-
-          cat > app/build.gradle.kts <<EOF
+          cat > app/build.gradle <<'EOF'
           plugins {
-              id("com.android.application")
-              id("org.jetbrains.kotlin.android")
+              id 'com.android.application'
           }
+
           android {
-              namespace = "$PACKAGE_NAME"
-              compileSdk = 35
+              namespace System.getenv("PACKAGE_NAME")
+              compileSdk 35
+
               defaultConfig {
-                  applicationId = "$PACKAGE_NAME"
-                  minSdk = 23
-                  targetSdk = 28
-                  versionCode = 1
-                  versionName = "1.0"
+                  applicationId System.getenv("PACKAGE_NAME")
+                  minSdk 23
+                  targetSdk 28
+                  versionCode 1
+                  versionName "1.0"
               }
           }
           EOF
 
-          if [ "$MODE" = "url" ]; then
-            echo "Using URL: $SITE_URL"
-            PERMISSION='<uses-permission android:name="android.permission.INTERNET" />'
-            LOAD='webView.loadUrl("'$SITE_URL'")'
+          cat > gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          EOF
+
+          cat > "app/src/main/java/$PACKAGE_PATH/MainActivity.java" <<'EOF'
+          package PACKAGE_PLACEHOLDER;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.view.ViewGroup;
+          import android.view.Window;
+          import android.graphics.Color;
+
+          public class MainActivity extends Activity {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+                  WebView webView = new WebView(this);
+                  webView.setLayoutParams(new ViewGroup.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      ViewGroup.LayoutParams.MATCH_PARENT
+                  ));
+
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setAllowFileAccess(false);
+
+                  webView.setWebViewClient(new WebViewClient());
+                  webView.setWebChromeClient(new WebChromeClient());
+                  webView.setBackgroundColor(Color.rgb(15, 18, 22));
+
+                  setContentView(webView);
+
+                  if ("url".equals(BuildConfig.BUILD_TYPE)) {
+                      webView.loadUrl("https://example.com");
+                  } else {
+                      webView.loadUrl("file:///android_asset/index.html");
+                  }
+              }
+
+              @Override
+              public void onBackPressed() {
+                  WebView webView = (WebView) findViewById(android.R.id.content)
+                      .getRootView();
+                  super.onBackPressed();
+              }
+          }
+          EOF
+
+          sed -i "s/PACKAGE_PLACEHOLDER/$PACKAGE_NAME/" \
+            "app/src/main/java/$PACKAGE_PATH/MainActivity.java"
+
+          if [[ "$MODE" == "url" ]]; then
+            sed -i "s|https://example.com|$SITE_URL|" \
+              "app/src/main/java/$PACKAGE_PATH/MainActivity.java"
           else
-            echo "HTML mode selected"
-            test -f input/index.html || { echo "Missing input/index.html"; exit 1; }
-            cp input/index.html app/src/main/assets/index.html
-            PERMISSION=''
-            LOAD='webView.loadUrl("file:///android_asset/index.html")'
+            if [[ ! -f index.html ]]; then
+              echo "index.html was not found in the repository root."
+              exit 1
+            fi
+            cp index.html app/src/main/assets/index.html
           fi
 
           cat > app/src/main/AndroidManifest.xml <<EOF
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            $PERMISSION
-            <application android:theme="@android:style/Theme.Material.Light.NoActionBar" android:label="$APP_NAME">
-              <activity android:name=".MainActivity" android:exported="true">
-                <intent-filter>
-                  <action android:name="android.intent.action.MAIN"/>
-                  <category android:name="android.intent.category.LAUNCHER"/>
-                </intent-filter>
-              </activity>
-            </application>
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <application
+                  android:label="${APP_NAME}"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
+                  android:usesCleartextTraffic="false">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
           </manifest>
-          EOF
-
-          cat > "app/src/main/java/$PKG_PATH/MainActivity.kt" <<EOF
-          package $PACKAGE_NAME
-          import android.app.Activity
-          import android.os.Bundle
-          import android.webkit.WebView
-          import android.webkit.WebViewClient
-          class MainActivity : Activity() {
-            override fun onCreate(savedInstanceState: Bundle?) {
-              super.onCreate(savedInstanceState)
-              val webView = WebView(this)
-              webView.settings.javaScriptEnabled = true
-              webView.settings.domStorageEnabled = true
-              webView.webViewClient = WebViewClient()
-              setContentView(webView)
-              $LOAD
-            }
-          }
           EOF
 
       - name: Build APK
         run: gradle --no-daemon assembleDebug
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: android-apk
+          name: html-to-apk
           path: app/build/outputs/apk/debug/app-debug.apk
-          
+          if-no-files-found: error
