@@ -1,69 +1,178 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#090d0e">
-<title>HTML → APK Studio</title>
+<meta name="theme-color" content="#080d0c">
+<title>HTML2APK — Твоё приложение</title>
 <style>
-:root{color-scheme:dark;--bg:#090d0e;--panel:#11191a;--line:#263b38;--text:#effaf6;--muted:#a0b7b0;--teal:#36e0bd;--lime:#c7f77b;--danger:#ff9d9d}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#14352e 0,transparent 38%),var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-.wrap{max-width:960px;margin:auto;padding:22px 16px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 32px}.brand{display:flex;align-items:center;gap:10px;font-weight:850;letter-spacing:-.4px}.logo{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--teal),var(--lime));color:#07110e;font-size:20px}.pill{border:1px solid #31534b;border-radius:999px;padding:6px 10px;color:#aaf7e3;font-size:11px;font-weight:800;letter-spacing:.08em}
-.hero{margin:0 auto 25px;max-width:780px;text-align:center}.eyebrow{color:var(--teal);font-size:12px;font-weight:850;letter-spacing:.16em}.hero h1{font-size:clamp(32px,7vw,54px);line-height:1.05;letter-spacing:-1.8px;margin:13px 0}.grad{background:linear-gradient(90deg,var(--teal),var(--lime));-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{color:var(--muted);max-width:620px;margin:0 auto}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.7fr);gap:18px;align-items:start}.panel{background:linear-gradient(180deg,#131d1d,#101616);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 18px 60px #0003}.panel h2{font-size:18px;margin:0 0 4px}.sub{font-size:13px;color:var(--muted);margin:0 0 20px}.tabs{display:flex;gap:5px;padding:4px;background:#09100f;border:1px solid var(--line);border-radius:13px;margin:18px 0}.tab{flex:1;border:0;border-radius:9px;padding:10px 8px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:750}.tab.active{background:#1c4a3d;color:#e2fff4;box-shadow:inset 0 0 0 1px #2b806b}.field{margin:16px 0}.field label{display:block;margin-bottom:7px;font-size:13px;font-weight:750;color:#d8e9e3}input,textarea{width:100%;background:#09100f;border:1px solid #2b403b;border-radius:12px;color:var(--text);font:inherit;padding:12px;outline:none}input:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px #36e0bd18}input[type=file]{display:none}.drop{border:1px dashed #42665c;border-radius:14px;padding:18px;text-align:center;cursor:pointer;background:#0b1312}.drop strong{display:block}.drop small,.hint{display:block;color:var(--muted);font-size:12px;margin-top:6px}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.primary{width:100%;border:0;border-radius:13px;padding:14px 16px;background:linear-gradient(100deg,var(--teal),var(--lime));color:#07110e;font:inherit;font-weight:900;cursor:pointer}.primary:disabled{opacity:.5;cursor:not-allowed}.status{display:none;margin-top:14px;padding:12px;border-radius:12px;background:#0a1411;border:1px solid #2c5045;color:#c9f8e8;font-size:13px;overflow-wrap:anywhere}.status.error{border-color:#774343;color:var(--danger)}.note{color:var(--muted);font-size:12px;text-align:center;margin:12px 0 0}.side-title{font-size:15px;font-weight:800;margin-bottom:14px}.step{display:flex;gap:12px;margin:16px 0}.num{flex:none;width:29px;height:29px;display:grid;place-items:center;border-radius:10px;background:#183c32;color:var(--teal);font-weight:900}.step b{display:block;font-size:13px}.step span{display:block;font-size:12px;color:var(--muted);margin-top:2px}.foot{color:#7e9991;text-align:center;font-size:12px;margin-top:22px}.hidden{display:none!important}
-@media(max-width:720px){.layout{grid-template-columns:1fr}.top{padding-bottom:25px}.panel{padding:18px}.pill{display:none}}@media(max-width:400px){.row{grid-template-columns:1fr}.tabs .tab{font-size:12px}}
+:root {
+  --bg: #080d0c;
+  --card: #111b18;
+  --mint: #6dffd0;
+  --lime: #c9ff70;
+  --text: #effff8;
+  --muted: #91a79d;
+  --line: #244139;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 15% 0%, #12372b, transparent 40%), var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, sans-serif;
+}
+.wrap { width: min(1000px, calc(100% - 30px)); margin: auto; }
+header {
+  height: 75px;
+  border-bottom: 1px solid #ffffff0d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand { display: flex; gap: 10px; align-items: center; font-weight: 850; }
+.logo {
+  width: 37px; height: 37px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--mint), var(--lime));
+  display: grid; place-items: center; color: #07120d; font-size: 21px;
+}
+.brand small { display: block; color: var(--muted); font-size: 9px; letter-spacing: 2px; }
+.badge { border: 1px solid var(--line); padding: 7px 11px; border-radius: 99px; color: #b6d9ca; font-size: 11px; }
+.hero { text-align: center; padding: 55px 0 32px; animation: rise .6s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+.eyebrow { color: var(--mint); font-size: 11px; letter-spacing: 2px; font-weight: 800; margin-bottom: 15px; }
+h1 { font-size: clamp(38px, 7vw, 64px); line-height: 1.03; letter-spacing: -2px; margin: 0 0 17px; }
+.grad { background: linear-gradient(100deg, #f4fff8, var(--mint), var(--lime)); background-clip: text; color: transparent; }
+.sub { color: var(--muted); max-width: 520px; margin: auto; }
+.layout { display: grid; grid-template-columns: 1.3fr .8fr; gap: 17px; padding-bottom: 40px; }
+.card { border: 1px solid #6dffd01b; background: linear-gradient(145deg, #14211d, #0e1715); border-radius: 21px; padding: 23px; animation: rise .7s ease both; }
+.head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; }
+.head h2 { font-size: 17px; margin: 0; }
+.step { font-size: 10px; color: var(--mint); border: 1px solid var(--line); padding: 5px 8px; border-radius: 8px; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; background: #09110e; padding: 4px; border-radius: 12px; gap: 4px; margin-bottom: 16px; }
+.tab { border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: inherit; padding: 11px 7px; cursor: pointer; }
+.tab.active { background: #1a3028; color: var(--mint); }
+.drop { display: grid; place-items: center; text-align: center; min-height: 165px; padding: 20px; border: 1px dashed #6dffd055; border-radius: 15px; cursor: pointer; }
+.drop:hover { background: #6dffd00c; border-color: var(--mint); }
+.upicon { width: 43px; height: 43px; display: grid; place-items: center; margin: 0 auto 10px; background: #6dffd014; border-radius: 14px; color: var(--mint); font-size: 23px; }
+.drop strong { display: block; font-size: 14px; margin-bottom: 4px; }
+.drop p { margin: 0; color: var(--muted); font-size: 11px; }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.field { margin-top: 16px; }
+.field label { display: block; color: #b8cec3; font-size: 12px; font-weight: 700; margin-bottom: 7px; }
+.input { width: 100%; background: #09120f; border: 1px solid #6dffd022; border-radius: 10px; padding: 13px; color: var(--text); font: inherit; font-size: 13px; outline: none; }
+.input:focus { border-color: #6dffd099; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hint { color: #71877c; font-size: 10px; margin-top: 6px; }
+.primary { margin-top: 21px; width: 100%; padding: 14px; border: 0; border-radius: 11px; background: linear-gradient(100deg, var(--mint), var(--lime)); color: #07120d; font: inherit; font-weight: 850; cursor: pointer; transition: transform .2s; }
+.primary:hover { transform: translateY(-2px); }
+.note { text-align: center; color: #72877d; font-size: 10px; margin: 12px 0 0; }
+.side h3 { margin: 0 0 17px; font-size: 13px; color: #b5cbbf; }
+.feature { display: flex; gap: 11px; margin: 16px 0; }
+.ico { width: 34px; height: 34px; flex: none; display: grid; place-items: center; color: var(--mint); border: 1px solid var(--line); border-radius: 10px; }
+.feature strong { font-size: 12px; display: block; }
+.feature p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+.divider { height: 1px; background: var(--line); margin: 20px 0; }
+.status { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #09120f; display: flex; gap: 9px; }
+.status i { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #ffca70; margin-top: 6px; }
+.status strong { font-size: 11px; display: block; }
+.status p { font-size: 10px; color: var(--muted); margin: 4px 0 0; }
+footer { border-top: 1px solid #ffffff0c; padding: 20px 0 28px; color: #65796f; font-size: 10px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+[hidden] { display: none !important; }
+@media(max-width:720px) {
+  .hero { padding: 40px 0 25px; }
+  .layout { grid-template-columns: 1fr; gap: 13px; }
+  .card { padding: 18px; }
+  h1 { letter-spacing: -1px; }
+}
+@media(max-width:390px) { .two { grid-template-columns: 1fr; gap: 0; } }
+@media(prefers-reduced-motion:reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-<header class="top"><div class="brand"><div class="logo">A</div><span>HTML <span style="color:var(--teal)">→</span> APK Studio</span></div><span class="pill">ANDROID APP BUILDER</span></header>
-<section class="hero"><div class="eyebrow">YOUR IDEA · YOUR APP</div><h1>Преврати HTML<br>в <span class="grad">Android-приложение</span></h1><p>Укажи сайт или загрузи HTML-файл. После подключения сервера сборки здесь можно будет запускать сборку и скачивать APK.</p></section>
-<div class="layout">
-<section class="panel"><h2>Создать приложение</h2><p class="sub">Заполни параметры будущего приложения.</p>
-<div class="tabs"><button class="tab active" id="urlTab" type="button">Ссылка на сайт</button><button class="tab" id="htmlTab" type="button">HTML-файл</button></div>
-<div id="urlPanel"><div class="field"><label for="siteUrl">Адрес сайта (HTTPS)</label><input id="siteUrl" type="url" placeholder="https://example.com"><span class="hint">Приложение будет открывать сайт через Android WebView.</span></div></div>
-<div id="htmlPanel" class="hidden"><div class="field"><label>HTML-файл</label><label class="drop" for="htmlFile"><strong id="fileLabel">＋ Выбрать файл .html</strong><small>Выбери HTML-файл на телефоне</small><input id="htmlFile" type="file" accept=".html,.htm,text/html"></label></div></div>
-<div class="row"><div class="field"><label for="appName">Название приложения</label><input id="appName" maxlength="40" value="My App" placeholder="My App"></div><div class="field"><label for="packageName">Package name</label><input id="packageName" value="com.example.myapp" placeholder="com.example.myapp"><span class="hint">Например: com.example.game</span></div></div>
-<div class="field"><label for="apiBase">Адрес сервера сборки (позже)</label><input id="apiBase" type="url" placeholder="https://your-build-server.example"><span class="hint">Этот адрес выдастся после настройки backend. Не вставляй сюда пароль или токен.</span></div>
-<button class="primary" id="buildBtn" type="button">Создать APK</button>
-<div class="status" id="status" role="status"></div>
-<p class="note">Интерфейс готов. Для настоящей сборки нужно подключить сервер API.</p>
+<header>
+  <div class="brand"><div class="logo">↗</div><div>HTML<span style="color:var(--mint)">2</span>APK<small>WEB APP CONVERTER</small></div></div>
+  <div class="badge">✦ ТВОЙ ПРОЕКТ</div>
+</header>
+<section class="hero">
+  <div class="eyebrow">✦ FROM WEB TO APP</div>
+  <h1>Твой сайт.<br><span class="grad">Твоё приложение.</span></h1>
+  <p class="sub">Подготовь свой веб-проект — просто, красиво и без лишней суеты.</p>
 </section>
-<aside class="panel"><div class="side-title">Как это работает</div>
-<div class="step"><div class="num">1</div><div><b>Добавь HTML или ссылку</b><span>Выбери файл с телефона или укажи HTTPS-сайт.</span></div></div>
-<div class="step"><div class="num">2</div><div><b>Запусти облачную сборку</b><span>Сервер создаст Android-проект и соберёт APK.</span></div></div>
-<div class="step"><div class="num">3</div><div><b>Скачай APK</b><span>После завершения появится ссылка на готовый файл.</span></div></div>
-<hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
-<div class="hint">Пока сервер не подключён, кнопка не будет притворяться, что APK уже собран. Сначала опубликуем страницу, затем подключим backend.</div>
+<main class="layout">
+<section class="card">
+  <div class="head"><h2>Настрой приложение</h2><span class="step">ШАГ 01 / 02</span></div>
+  <div class="tabs"><button class="tab active" id="fileTab" type="button">↑ HTML-файл</button><button class="tab" id="urlTab" type="button">↗ Ссылка на сайт</button></div>
+  <div id="filePanel">
+    <label class="drop" for="htmlFile"><input id="htmlFile" type="file" accept=".html,.htm,text/html"><div><div class="upicon">↑</div><strong>Выбери HTML-файл</strong><p>Нажми, чтобы открыть файлы телефона</p><p style="margin-top:5px">Поддерживается .html и .htm</p></div></label>
+    <div id="fileInfo" class="hint"></div>
+    <div class="hint">Совет: для отдельной страницы выбери index.html.</div>
+  </div>
+  <div id="urlPanel" hidden><div class="field" style="margin-top:0"><label for="url">Адрес сайта</label><input class="input" id="url" type="url" placeholder="https://example.com"><div class="hint">Сайт должен открываться по HTTPS.</div></div></div>
+  <div class="two">
+    <div class="field"><label for="appName">Название приложения</label><input class="input" id="appName" maxlength="40" value="Моё приложение"></div>
+    <div class="field"><label for="pkg">Идентификатор</label><input class="input" id="pkg" value="com.example.myapp" autocapitalize="none" spellcheck="false"><div class="hint">Например: com.name.app</div></div>
+  </div>
+  <button class="primary" id="continue" type="button">Продолжить ↗</button>
+  <p class="note">Сначала проверим настройки проекта.</p>
+</section>
+<aside class="card side">
+  <h3>Всё нужное — в одном месте</h3>
+  <div class="feature"><div class="ico">⌁</div><div><strong>Простой процесс</strong><p>Выбери файл или ссылку, задай имя и продолжай.</p></div></div>
+  <div class="feature"><div class="ico">✧</div><div><strong>Плавный интерфейс</strong><p>Мягкие цвета, анимации и аккуратные карточки.</p></div></div>
+  <div class="feature"><div class="ico">◈</div><div><strong>Для телефона</strong><p>Страница подстраивается под небольшой экран.</p></div></div>
+  <div class="divider"></div>
+  <div class="status"><i></i><div><strong>Сборка пока не подключена</strong><p>Создание APK нужно связать с процессом сборки отдельно.</p></div></div>
 </aside>
+</main>
+<footer><span>HTML2APK · Веб-проект в приложении</span><span>Сделано для твоих идей ✦</span></footer>
 </div>
-<div class="foot">HTML → APK Studio · Тёмная тема · Бирюзовые акценты</div>
-</div>
+<div id="toast" role="status" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#17251f;border:1px solid #6dffd044;border-radius:12px;padding:12px 15px;max-width:90%;color:#effff8;font-size:12px;display:none"></div>
 <script>
-const $=id=>document.getElementById(id);let mode='url',htmlFile=null;
-function setMode(next){mode=next;$('urlTab').classList.toggle('active',mode==='url');$('htmlTab').classList.toggle('active',mode==='html');$('urlPanel').classList.toggle('hidden',mode!=='url');$('htmlPanel').classList.toggle('hidden',mode!=='html');}
-$('urlTab').addEventListener('click',()=>setMode('url'));$('htmlTab').addEventListener('click',()=>setMode('html'));
-$('htmlFile').addEventListener('change',e=>{htmlFile=e.target.files[0]||null;$('fileLabel').textContent=htmlFile?'✓ '+htmlFile.name:'＋ Выбрать файл .html';});
-function showStatus(msg,isError=false){const el=$('status');el.textContent=msg;el.classList.toggle('error',isError);el.style.display='block';}
-$('buildBtn').addEventListener('click',async()=>{
- const name=$('appName').value.trim(),pkg=$('packageName').value.trim(),base=$('apiBase').value.trim().replace(/\/+$/,'');
- if(!name){showStatus('Введи название приложения.',true);return}
- if(!/^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/.test(pkg)){showStatus('Проверь package name. Пример: com.example.myapp',true);return}
- if(mode==='url'&&!/^https:\/\/\S+$/i.test($('siteUrl').value.trim())){showStatus('Введи полный HTTPS-адрес сайта.',true);return}
- if(mode==='html'&&!htmlFile){showStatus('Сначала выбери HTML-файл.',true);return}
- if(!base){showStatus('Сайт пока не подключён к серверу сборки. Сохрани эту страницу в репозитории; следующим шагом развернём backend и добавим его адрес в это поле. APK ещё не собран.',true);return}
- const form=new FormData();form.append('appName',name);form.append('packageName',pkg);form.append('mode',mode);
- if(mode==='url')form.append('url',$('siteUrl').value.trim());else form.append('html',htmlFile);
- const btn=$('buildBtn');btn.disabled=true;btn.textContent='Отправляем на сборку…';
- try{
-  const response=await fetch(base+'/api/build',{method:'POST',body:form});
-  if(!response.ok)throw new Error('Сервер вернул ошибку HTTP '+response.status);
-  const data=await response.json();
-  if(data.downloadUrl){showStatus('Сборка готова. Начинаю скачивание APK…');location.href=data.downloadUrl;}
-  else if(data.jobId){showStatus('Сборка запущена. ID задачи: '+data.jobId+'. Подключим отображение статуса после настройки backend.');}
-  else throw new Error(data.error||'Сервер не вернул ссылку на APK.');
- }catch(err){showStatus('Не удалось связаться с сервером сборки: '+err.message,true)}
- finally{btn.disabled=false;btn.textContent='Создать APK'}
+const $ = id => document.getElementById(id);
+let mode = "file", toastTimer;
+function toast(message) {
+  $("toast").textContent = message;
+  $("toast").style.display = "block";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("toast").style.display = "none", 3500);
+}
+function setMode(value) {
+  mode = value;
+  $("filePanel").hidden = value !== "file";
+  $("urlPanel").hidden = value !== "url";
+  $("fileTab").classList.toggle("active", value === "file");
+  $("urlTab").classList.toggle("active", value === "url");
+}
+$("fileTab").onclick = () => setMode("file");
+$("urlTab").onclick = () => setMode("url");
+$("htmlFile").addEventListener("change", () => {
+  const file = $("htmlFile").files[0];
+  if (!file) return;
+  if (!/\.html?$/i.test(file.name)) {
+    $("htmlFile").value = "";
+    toast("Выбери файл .html или .htm");
+    return;
+  }
+  $("fileInfo").textContent = "✓ Выбран файл: " + file.name;
 });
+$("continue").onclick = () => {
+  const name = $("appName").value.trim();
+  const pkg = $("pkg").value.trim();
+  if (!name) return toast("Введи название приложения");
+  if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(pkg))
+    return toast("Пример идентификатора: com.example.myapp");
+  if (mode === "file" && !$("htmlFile").files.length)
+    return toast("Сначала выбери HTML-файл");
+  if (mode === "url") {
+    try {
+      if (new URL($("url").value).protocol !== "https:") throw new Error();
+    } catch (_) { return toast("Введи ссылку, начинающуюся с https://"); }
+  }
+  toast("Настройки проверены. Автоматическая сборка пока не подключена.");
+};
 </script>
-</body></html>
+</body>
+</html>
