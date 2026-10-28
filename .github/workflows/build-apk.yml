@@ -1,20 +1,23 @@
-name: Build APK
+name: Build HTML to APK
 
 on:
   workflow_dispatch:
     inputs:
       app_name:
-        description: "Название приложения"
+        description: "Application name"
         required: true
-        default: "HTML2APK"
+        default: "My HTML App"
+        type: string
       package_name:
-        description: "Идентификатор приложения"
+        description: "Android package name"
         required: true
-        default: "com.example.html2apk"
-      site_url:
-        description: "Адрес сайта"
+        default: "com.example.htmlapp"
+        type: string
+      html_path:
+        description: "Path to uploaded HTML"
         required: true
-        default: "https://frogi4rus.github.io/html-to-apk/"
+        default: "uploads/index.html"
+        type: string
 
 permissions:
   contents: read
@@ -22,10 +25,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      APP_NAME: ${{ inputs.app_name }}
-      PACKAGE_NAME: ${{ inputs.package_name }}
-      SITE_URL: ${{ inputs.site_url }}
 
     steps:
       - name: Checkout repository
@@ -39,22 +38,78 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: "platform-tools platforms;android-35 build-tools;35.0.0"
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.7"
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Create Android project
-        shell: bash
+      - name: Prepare HTML
+        env:
+          HTML_PATH: ${{ inputs.html_path }}
+          APP_NAME: ${{ inputs.app_name }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
         run: |
-          set -e
+          test -f "$HTML_PATH" || {
+            echo "HTML file not found: $HTML_PATH"
+            exit 1
+          }
 
-          PACKAGE_PATH="${PACKAGE_NAME//./\/}"
-          JAVA_DIR="app/src/main/java/$PACKAGE_PATH"
-          mkdir -p "$JAVA_DIR"
+          mkdir -p app/src/main/assets
+          cp "$HTML_PATH" app/src/main/assets/index.html
+
+          mkdir -p app/src/main/java/com/example/htmlapp
+          mkdir -p app/src/main/res/values
+
+          SAFE_NAME=$(printf '%s' "$APP_NAME" | sed 's/[<>&"]//g')
+          cat > app/src/main/res/values/strings.xml <<EOF
+          <resources>
+              <string name="app_name">$SAFE_NAME</string>
+          </resources>
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml <<EOF
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <application
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
+                  android:label="@string/app_name"
+                  android:usesCleartextTraffic="true">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/java/com/example/htmlapp/MainActivity.java <<'EOF'
+          package com.example.htmlapp;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebView;
+          import android.webkit.WebSettings;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  WebView web = new WebView(this);
+                  WebSettings settings = web.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  web.setWebChromeClient(new WebChromeClient());
+                  web.setWebViewClient(new WebViewClient());
+                  setContentView(web);
+                  web.loadUrl("file:///android_asset/index.html");
+              }
+          }
+          EOF
 
           cat > settings.gradle <<'EOF'
           pluginManagement {
@@ -71,8 +126,8 @@ jobs:
                   mavenCentral()
               }
           }
-          rootProject.name = "HTML2APK"
-          include(":app")
+          rootProject.name = "HTMLToAPK"
+          include ':app'
           EOF
 
           cat > build.gradle <<'EOF'
@@ -87,11 +142,11 @@ jobs:
           }
 
           android {
-              namespace '__PACKAGE__'
+              namespace 'com.example.htmlapp'
               compileSdk 35
 
               defaultConfig {
-                  applicationId '__PACKAGE__'
+                  applicationId 'com.example.htmlapp'
                   minSdk 23
                   targetSdk 28
                   versionCode 1
@@ -100,154 +155,19 @@ jobs:
           }
           EOF
 
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
+          printf '%s\n' 'distributionBase=GRADLE_USER_HOME' 'distributionPath=wrapper/dists' 'zipStoreBase=GRADLE_USER_HOME' 'zipStorePath=wrapper/dists' > gradle.properties
 
-              <application
-                  android:label="__APP_NAME__"
-                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
-                  android:usesCleartextTraffic="false">
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
 
-                  <activity
-                      android:name="__PACKAGE__.MainActivity"
-                      android:exported="true">
-
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-
-                  </activity>
-              </application>
-          </manifest>
-          EOF
-
-          cat > "$JAVA_DIR/MainActivity.java" <<'EOF'
-          package __PACKAGE__;
-
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.content.Intent;
-          import android.net.Uri;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-          import android.webkit.ValueCallback;
-
-          public class MainActivity extends Activity {
-              private WebView webView;
-              private ValueCallback<Uri[]> fileCallback;
-              private static final int FILE_REQUEST = 1001;
-
-              @Override
-              protected void onCreate(Bundle state) {
-                  super.onCreate(state);
-
-                  webView = new WebView(this);
-                  webView.getSettings().setJavaScriptEnabled(true);
-                  webView.getSettings().setDomStorageEnabled(true);
-                  webView.setWebViewClient(new WebViewClient());
-
-                  webView.setWebChromeClient(new WebChromeClient() {
-                      @Override
-                      public boolean onShowFileChooser(
-                              WebView view,
-                              ValueCallback<Uri[]> callback,
-                              FileChooserParams params) {
-                          if (fileCallback != null) {
-                              fileCallback.onReceiveValue(null);
-                          }
-                          fileCallback = callback;
-
-                          Intent intent;
-                          try {
-                              intent = params.createIntent();
-                          } catch (Exception e) {
-                              intent = new Intent(Intent.ACTION_GET_CONTENT);
-                              intent.addCategory(Intent.CATEGORY_OPENABLE);
-                              intent.setType("*/*");
-                          }
-
-                          try {
-                              startActivityForResult(intent, FILE_REQUEST);
-                              return true;
-                          } catch (Exception e) {
-                              fileCallback = null;
-                              callback.onReceiveValue(null);
-                              return false;
-                          }
-                      }
-                  });
-
-                  setContentView(webView);
-                  webView.loadUrl("__SITE_URL__");
-              }
-
-              @Override
-              protected void onActivityResult(
-                      int requestCode, int resultCode, Intent data) {
-                  super.onActivityResult(requestCode, resultCode, data);
-
-                  if (requestCode == FILE_REQUEST && fileCallback != null) {
-                      Uri[] result = null;
-                      if (resultCode == RESULT_OK && data != null) {
-                          if (data.getClipData() != null) {
-                              int count = data.getClipData().getItemCount();
-                              result = new Uri[count];
-                              for (int i = 0; i < count; i++) {
-                                  result[i] = data.getClipData()
-                                      .getItemAt(i).getUri();
-                              }
-                          } else if (data.getData() != null) {
-                              result = new Uri[]{data.getData()};
-                          }
-                      }
-                      fileCallback.onReceiveValue(result);
-                      fileCallback = null;
-                  }
-              }
-
-              @Override
-              public void onBackPressed() {
-                  if (webView != null && webView.canGoBack()) {
-                      webView.goBack();
-                  } else {
-                      super.onBackPressed();
-                  }
-              }
-          }
-          EOF
-
-          python3 - <<'PY'
-          import os
-          from pathlib import Path
-
-          package = os.environ["PACKAGE_NAME"]
-          replacements = {
-              "__PACKAGE__": package,
-              "__APP_NAME__": os.environ["APP_NAME"],
-              "__SITE_URL__": os.environ["SITE_URL"],
-          }
-
-          paths = [
-              Path("app/build.gradle"),
-              Path("app/src/main/AndroidManifest.xml"),
-              Path("app/src/main/java") / package.replace(".", "/") / "MainActivity.java",
-          ]
-
-          for path in paths:
-              text = path.read_text()
-              for old, new in replacements.items():
-                  text = text.replace(old, new)
-              path.write_text(text)
-          PY
-
-      - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
+      - name: Build APK
+        run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: html-to-apk
+          name: html-app-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
