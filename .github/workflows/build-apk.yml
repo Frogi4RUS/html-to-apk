@@ -16,7 +16,7 @@ on:
       html_path:
         description: Path to HTML file
         required: true
-        default: uploads/index.html
+        default: ./uploads/index.html
         type: string
 
 permissions:
